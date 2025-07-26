@@ -98,6 +98,24 @@ int voices_array[15][4] = {
 	{0}
 };
 
+int voices_check_array[15][4] = {
+	{0},
+	{9, 10, 15, 19},
+	{35, 34, 34},
+	{12, 38, 19},
+	{50, 81},
+	{41, 27},
+	{34, 54, 40},
+	{18, 2, 22},
+	{17, 20, 18, 41},
+	{38, 37, 46, 58},
+	{54},
+	{38},
+	{25, 19},
+	{25},
+	{0}
+};
+
 uint32_t audio_player_play(char *path, uint8_t loop, float vol);
 int audio_player_is_playing(void *m);
 void audio_player_stop(void *m);
@@ -183,8 +201,10 @@ void nativeSetSoundVolume(int id, float vol) {
 int active_voice = -1;
 void nativePlayVoice(int id, int id2, int id3, float vol) {
 	//sceClibPrintf("nativePlayVoice %d %d %d\n", id, id2, id3);
-	active_voice = voices_array[id2][id3] + id;
-	nativePlaySound(active_voice, vol, 0);
+	if (id < voices_check_array[id2][id3]) {
+		active_voice = voices_array[id2][id3] + id;
+		nativePlaySound(active_voice, vol, 0);
+	}
 }
 
 void nativeStopVoice(int id, int id2, int id3) {
@@ -272,7 +292,7 @@ FILE *fopen_hook(char *fname, char *mode) {
 		snprintf(new_path, sizeof(new_path), "%s%s", DATA_PATH, fname + 7);
 		fname = new_path;
 	}
-	sceClibPrintf("fopen %s\n", fname);
+	//sceClibPrintf("fopen %s\n", fname);
 	return fopen(fname, mode);
 }
 
