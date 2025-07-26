@@ -5,21 +5,17 @@
 #include "soloud.h"
 #include "soloud_wavstream.h"
 
-#define MAX_SOUNDS_NUM (128)
-#define MAX_MUSICS_NUM (32)
+#define MAX_SOUNDS_NUM (1250)
 
 typedef struct {
 	int handle;
 	SoLoud::WavStream source;
 	bool valid;
+	bool is_music;
 } audio_instance;
 
 SoLoud::Soloud soloud;
 audio_instance snd[MAX_SOUNDS_NUM];
-int curr_snd = 0;
-
-audio_instance snd_loop[MAX_MUSICS_NUM];
-int curr_snd_loop = 0;
 
 extern "C" {
 
@@ -33,28 +29,28 @@ void audio_player_set_volume(void *m, float vol) {
 	soloud.setVolume(mus->handle, vol);
 }
 
-void *audio_player_play(char *path, uint8_t loop, float vol) {
+void *audio_player_play(char *path, uint8_t loop, float vol, int id) {
 	if (loop) {
 		//sceClibPrintf("Loading %s in music slot %d\n", path, curr_snd_loop);
-		snd_loop[curr_snd_loop].valid = true;
-		snd_loop[curr_snd_loop].source.load(path);
-		snd_loop[curr_snd_loop].source.setVolume(vol);
-		snd_loop[curr_snd_loop].source.setLooping(true);
-		snd_loop[curr_snd_loop].source.setSingleInstance(true);
-		snd_loop[curr_snd_loop].handle = soloud.playBackground(snd_loop[curr_snd_loop].source);
-		void *r = (void *)&snd_loop[curr_snd_loop];
-		curr_snd_loop = (curr_snd_loop + 1) % MAX_MUSICS_NUM;
+		snd[id].valid = true;
+		snd[id].source.load(path);
+		snd[id].source.setVolume(vol);
+		snd[id].source.setLooping(true);
+		snd[id].source.setSingleInstance(true);
+		snd[id].handle = soloud.playBackground(snd[id].source);
+		snd[id].is_music = true;
+		void *r = (void *)&snd[id];
 		return r;
 	} else {
 		//sceClibPrintf("Loading %s in sound slot %d\n", path, curr_snd);
-		snd[curr_snd].valid = true;
-		snd[curr_snd].source.load(path);
-		snd[curr_snd].source.setVolume(vol);
-		snd[curr_snd].source.setLooping(false);
-		snd[curr_snd].source.setSingleInstance(true);
-		snd[curr_snd].handle = soloud.play(snd[curr_snd].source);
-		void *r = (void *)&snd[curr_snd];
-		curr_snd = (curr_snd + 1) % MAX_SOUNDS_NUM;
+		snd[id].valid = true;
+		snd[id].source.load(path);
+		snd[id].source.setVolume(vol);
+		snd[id].source.setLooping(false);
+		snd[id].source.setSingleInstance(true);
+		snd[id].handle = soloud.play(snd[id].source);
+		snd[id].is_music = false;
+		void *r = (void *)&snd[id];
 		return r;
 	}
 }
@@ -87,9 +83,6 @@ void audio_player_set_pause(void *m, uint8_t val) {
 
 void audio_player_stop_all_sounds() {
 	soloud.stopAll();
-	for (int i = 0; i < MAX_MUSICS_NUM; i++) {
-		snd_loop[i].valid = false;
-	}
 	for (int i = 0; i < MAX_SOUNDS_NUM; i++) {
 		snd[i].valid = false;
 	}
@@ -100,16 +93,16 @@ void audio_player_set_pause_all_sounds(uint8_t val) {
 }
 
 void audio_player_change_bgm_volume(float vol) {
-	for (int i = 0; i < MAX_MUSICS_NUM; i++) {
-		if (snd_loop[i].valid) {
-			audio_player_set_volume((void *)&snd_loop[i], vol);
+	for (int i = 0; i < MAX_SOUNDS_NUM; i++) {
+		if (snd[i].valid && snd[i].is_music) {
+			audio_player_set_volume((void *)&snd[i], vol);
 		}
 	}
 }
 
 void audio_player_change_sfx_volume(float vol) {
 	for (int i = 0; i < MAX_SOUNDS_NUM; i++) {
-		if (snd[i].valid) {
+		if (snd[i].valid && !snd[i].is_music) {
 			audio_player_set_volume((void *)&snd[i], vol);
 		}
 	}

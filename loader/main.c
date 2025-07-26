@@ -116,7 +116,7 @@ int voices_check_array[15][4] = {
 	{0}
 };
 
-uint32_t audio_player_play(char *path, uint8_t loop, float vol);
+uint32_t audio_player_play(char *path, uint8_t loop, float vol, int id);
 int audio_player_is_playing(void *m);
 void audio_player_stop(void *m);
 void audio_player_set_pause(void *m, int val);
@@ -139,7 +139,7 @@ void nativePlaySound(int id, float vol, int loop) {
 	sprintf(path, "%s/raw_%04d.ogg", audio_path, id);
 
 	if (audio_sources[id] == 0xDEADBEEF) {
-		audio_sources[id] = audio_player_play(path, loop, vol);
+		audio_sources[id] = audio_player_play(path, loop, vol, id);
 	} else {
 		audio_player_instance(audio_sources[id], loop, vol);
 	}
