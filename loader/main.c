@@ -244,6 +244,15 @@ void glTexImage2D_hook(GLenum target, GLint level, GLint internalFormat, GLsizei
 		is_pvrtc = 0;
 		glCompressedTexImage2D(target, level, GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG, width, height, border, ((width * height) * 4 + 7) / 8, data);
 	} else {
+		// HACK: Mitigate tex atlas bleeding wherever possible
+		if (width == 1024 && height == 1024) {
+			uint32_t *p = (uint32_t *)data;
+			for (int i = 0; i < 1024 * 1024; i++) {
+				if (p[i] == 0xFEFD01FC || p[i] == 0xFEFBFA27) {
+					p[i] = 0;
+				}
+			}
+		}
 		glTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
 	}
 }
