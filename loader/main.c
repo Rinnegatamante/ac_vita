@@ -30,6 +30,8 @@
 
 //#define DEBUG
 
+uint8_t is_xperia = 0;
+
 int _newlib_heap_size_user = MEMORY_NEWLIB_MB * 1024 * 1024;
 
 so_module main_mod;
@@ -284,6 +286,11 @@ void patch_game(void) {
 	hook_addr(so_symbol(&main_mod, "_ZN5Level16FindUsedMsgFacesEv"), (uintptr_t)&ret0);
 	hook_addr(so_symbol(&main_mod, "_ZN6Sprite10getModuleWEi"), (uintptr_t)&Sprite_getModuleW);
 	hook_addr(so_symbol(&main_mod, "_ZN6Sprite10getModuleHEi"), (uintptr_t)&Sprite_getModuleH);
+	
+	// Disable virtual analog stick rendering on Xperia build
+	if (is_xperia) {
+		hook_addr(so_symbol(&main_mod, "_ZN14CInputJoystick14RenderJoystickEv"), (uintptr_t)&ret0);
+	}
 }
 
 FILE *fopen_hook(char *fname, char *mode) {
@@ -781,21 +788,6 @@ int file_exists(const char *path) {
 	return sceIoGetstat(path, &stat) >= 0;
 }
 
-typedef struct {
-	float x;
-	float y;
-} touch_spot;
-
-enum {
-	INPUT_PUNCH,
-	INPUT_JUMP,
-	INPUT_PROJECTILE,
-	INPUT_SUPER,
-	INPUT_DANGER,
-	INPUT_PAUSE,
-	INPUT_MOVEMENT_BASE
-};
-
 enum {
 	KEYCODE_CIRCLE = 4,
 	KEYCODE_DPAD_UP = 19,
@@ -890,6 +882,9 @@ void *pthread_main(void *arg) {
 		vglSwapBuffers(GL_FALSE);
 	}
 	
+	int (* getEnv)(void *env) = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftASCR_ML_GameRenderer_getEnv");
+	is_xperia = getEnv ? 1 : 0;
+
 	patch_game();
 	so_flush_caches(&main_mod);
 	so_initialize(&main_mod);
@@ -921,8 +916,8 @@ void *pthread_main(void *arg) {
 	int (* appKeyPressed)(int id, int scancode) = (void *)so_symbol(&main_mod, "appKeyPressed");
 	int (* appKeyReleased)(int id, int scancode) = (void *)so_symbol(&main_mod, "appKeyReleased");
 
-	int (* getEnv)(void *env) = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftASCR_ML_GameRenderer_getEnv");
-	if (getEnv != NULL) { // Xperia Build
+	
+	if (is_xperia) {
 		Game_nativeInit = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftASCR_ML_AssassinsCreed_nativeInit");
 		nativeResize = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftASCR_ML_GameRenderer_nativeResize");
 		GameRenderer_nativeInit = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftASCR_ML_GameRenderer_nativeInit");
