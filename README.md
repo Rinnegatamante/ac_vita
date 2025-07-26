@@ -9,6 +9,14 @@ By doing so, it's basically as if we emulate a minimalist Android environment in
 
 ## Changelog
 
+### v.0.9.5
+
+- Mitigated border glitches in the main menu.
+- Fixed a bug causing some dialogues audio to play in incorrect places.
+- Improved the whole audio system: now sounds shouldn't glitch one on top of the other anymore.
+- Removed debug logs leftovers.
+- Disabled the rendering of the left virtual analog on screen when using the Xperia build of the game.
+
 ### v.0.9
 
 - Initial release.
@@ -16,10 +24,8 @@ By doing so, it's basically as if we emulate a minimalist Android environment in
 ## Note
 
 - This port works with both the Android and Xperia build of the game. In order to achieve the best result, it's highly recommended to use the Xperia build (v.1.0.2) of the game since it has native physical buttons support.
-- There are some issues with audio voiced sequences playing sometimes in incorrect oders.
 - There are some border glitches on some 2D sprites.
 - There are some issues in which pause menu and analogs movement can stop working in certain levels (Dpad movement will still work fine).
-- Sometimes audio might load wrong sounds (seems to be specific to idleing for long time periods?)
 
 ## Setup Instructions (For End Users)
 
