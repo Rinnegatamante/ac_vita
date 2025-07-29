@@ -295,11 +295,6 @@ void patch_game(void) {
 	hook_addr(so_symbol(&main_mod, "_ZN5Level16FindUsedMsgFacesEv"), (uintptr_t)&ret0);
 	hook_addr(so_symbol(&main_mod, "_ZN6Sprite10getModuleWEi"), (uintptr_t)&Sprite_getModuleW);
 	hook_addr(so_symbol(&main_mod, "_ZN6Sprite10getModuleHEi"), (uintptr_t)&Sprite_getModuleH);
-	
-	// Disable virtual analog stick rendering on Xperia build
-	if (is_xperia) {
-		hook_addr(so_symbol(&main_mod, "_ZN14CInputJoystick14RenderJoystickEv"), (uintptr_t)&ret0);
-	}
 }
 
 FILE *fopen_hook(char *fname, char *mode) {
@@ -855,7 +850,7 @@ int main(int argc, char *argv[]) {
 }
 
 void *pthread_main(void *arg) {
-	sceSysmoduleLoadModule(SCE_SYSMODULE_RAZOR_CAPTURE);
+	//sceSysmoduleLoadModule(SCE_SYSMODULE_RAZOR_CAPTURE);
 	sceSysmoduleLoadModule(SCE_SYSMODULE_AVPLAYER);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
 	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG_WIDE);
@@ -924,7 +919,7 @@ void *pthread_main(void *arg) {
 	int (* nativeOnTouch)(void *env, void *obj, int index, int action, int x, int y);
 	int (* appKeyPressed)(int id, int scancode) = (void *)so_symbol(&main_mod, "appKeyPressed");
 	int (* appKeyReleased)(int id, int scancode) = (void *)so_symbol(&main_mod, "appKeyReleased");
-
+	int (* nativeKeyboardEnabled) (void *env, void *obj, int status);
 	
 	if (is_xperia) {
 		Game_nativeInit = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftASCR_ML_AssassinsCreed_nativeInit");
@@ -934,6 +929,9 @@ void *pthread_main(void *arg) {
 		GLMediaPlayer_nativeInit = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftASCR_ML_GLMediaPlayer_nativeInit");
 		nativeResume = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftASCR_ML_GameGLSurfaceView_nativeResume");
 		nativeOnTouch = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftASCR_ML_AssassinsCreed_nativeOnTouch");
+		nativeKeyboardEnabled = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftASCR_ML_AssassinsCreed_nativeKeyboardEnabled");
+		getEnv(fake_env);
+		nativeKeyboardEnabled(fake_env, NULL, 1); // This disables on screen virtual buttons
 	} else {
 		Game_nativeInit = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftACHP_AssassinsCreed_nativeInit");
 		nativeResize = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftACHP_GameRenderer_nativeResize");
@@ -944,8 +942,6 @@ void *pthread_main(void *arg) {
 		nativeOnTouch = (void *)so_symbol(&main_mod, "Java_com_gameloft_android_GAND_GloftACHP_AssassinsCreed_nativeOnTouch");
 	}
 
-	if (getEnv != NULL)
-		getEnv(fake_env);
 	GameRenderer_nativeInit(fake_env, NULL, 0, 0);
 	nativeResize(fake_env, NULL, SCREEN_W, SCREEN_H);
 	Game_nativeInit(fake_env, NULL, 0);
@@ -970,7 +966,7 @@ void *pthread_main(void *arg) {
 		sceTouchPeek(SCE_TOUCH_PORT_FRONT, &touch, 1);
 		SceCtrlData pad;
 		sceCtrlPeekBufferPositive(0, &pad, 1);
-		if (getEnv != NULL) {
+		if (is_xperia) {
 			if (pad.lx > 162 || pad.lx < 92 || pad.ly > 162 || pad.ly < 92) {
 				if (joy_active) {
 					nativeOnTouch(fake_env, NULL, 2, 2, pad.lx, 255 - pad.ly);
