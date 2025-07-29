@@ -9,6 +9,12 @@ By doing so, it's basically as if we emulate a minimalist Android environment in
 
 ## Changelog
 
+### v.1.0
+
+- Completely removed virtual buttons from the screen in the Xperia build.
+- Made so that the Xperia build shows hints with Xperia button icons.
+- Added physical buttons support for non-Xperia build through fake input presses.
+
 ### v.0.9.5
 
 - Mitigated border glitches in the main menu.
@@ -25,7 +31,8 @@ By doing so, it's basically as if we emulate a minimalist Android environment in
 
 - This port works with both the Android and Xperia build of the game. In order to achieve the best result, it's highly recommended to use the Xperia build (v.1.0.2) of the game since it has native physical buttons support.
 - There are some border glitches on some 2D sprites.
-- There are some issues in which pause menu and analogs movement can stop working in certain levels (Dpad movement will still work fine).
+- There are some rare issues in which pause menu and analogs movement can stop working in certain levels (Dpad movement will still work fine).
+- The non-Xperia build might crash during some cutscenes, it is suggested to skip them if you want to use this version.
 
 ## Setup Instructions (For End Users)
 
