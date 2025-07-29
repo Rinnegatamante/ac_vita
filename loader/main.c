@@ -955,7 +955,14 @@ void *pthread_main(void *arg) {
 			appKeyPressed(id, code); \
 		} else if ((oldpad & btn) == btn) { \
 			appKeyReleased(id, code); \
-		}		
+		}
+
+	#define fakePhysicalInput(btn, x, y) \
+		if ((pad.buttons & btn) == btn) { \
+			nativeOnTouch(fake_env, NULL, 1, ((oldpad & btn) == btn) ? 2 : 1, x * (1680.0f / 1920.0f), y * (916.0f / 1088.0f)); \
+		} else if ((oldpad & btn) == btn) { \
+			nativeOnTouch(fake_env, NULL, 1, 0, (int)(x * (1680.0f / 1920.0f)), (int)(y * (916.0f / 1088.0f))); \
+		}
 	
 	uint32_t oldpad = 0;
 	int joy_active = 0;
@@ -991,7 +998,27 @@ void *pthread_main(void *arg) {
 			physicalInput(SCE_CTRL_RTRIGGER, KEYCODE_BUTTON_R1, SCANCODE_R1)
 			physicalInput(SCE_CTRL_SELECT, KEYCODE_BUTTON_SELECT, SCANCODE_SELECT)
 			physicalInput(SCE_CTRL_START, KEYCODE_BUTTON_START, SCANCODE_START)
-		}	
+		} else {
+			if (pad.lx > 162 || pad.lx < 92 || pad.ly > 162 || pad.ly < 92) {
+				if (joy_active) {
+					nativeOnTouch(fake_env, NULL, 2, 2, (int)((((float)pad.lx / 2.0f) + 60.0f) * (1680.0f / 1920.0f)), (int)((((float)pad.ly / 2.0f) + 340.0f) * (916.0f / 1088.0f)));
+				} else {
+					nativeOnTouch(fake_env, NULL, 2, 1, (int)(122.0f * (1680.0f / 1920.0f)), (int)(400.0f * (916.0f / 1088.0f)));
+					joy_active = 1;
+				}
+			} else if (joy_active) {
+				joy_active = 0;
+				nativeOnTouch(fake_env, NULL, 2, 0, (int)((((float)pad.lx / 2.0f) + 60.0f) * (1680.0f / 1920.0f)), (int)(((float)((float)pad.ly / 2.0f) + 340.0f) * (916.0f / 1088.0f)));
+			}
+			
+			fakePhysicalInput(SCE_CTRL_CROSS, 878.0f, 441.0f) // Jump
+			fakePhysicalInput(SCE_CTRL_CIRCLE, 889.0f, 235.0f) // Action
+			fakePhysicalInput(SCE_CTRL_SQUARE, 640.0f, 441.0f) // Light Attack
+			fakePhysicalInput(SCE_CTRL_TRIANGLE, 757.0f, 441.0f) // Heavy Attack
+			fakePhysicalInput(SCE_CTRL_LTRIGGER, 370.0f, 488.0f) // Guard
+			fakePhysicalInput(SCE_CTRL_START, 34.0f, 36.0f) // Pause
+			fakePhysicalInput(SCE_CTRL_SELECT, 855.0f, 33.0f) // Skip
+		}
 		oldpad = pad.buttons;
 
 		for (int i = 0; i < 2; i++) {
